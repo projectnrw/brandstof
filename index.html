@@ -10,7 +10,7 @@ body{margin:0;padding:env(safe-area-inset-top) 12px 24px;background:var(--bg);co
 h1{font-size:22px}h2{font-size:17px;margin-top:24px}table{width:100%;border-collapse:collapse}td,th{padding:6px 4px;border-bottom:1px solid var(--ln);text-align:left}
 .n{text-align:right;white-space:nowrap}.m{color:var(--mut);font-size:12px}.seg{display:flex;background:var(--ln);border-radius:9px;padding:2px;margin:8px 0 12px}.seg button{flex:1;border:0;background:none;color:var(--fg);font:600 15px -apple-system,system-ui,sans-serif;padding:8px;border-radius:7px}.seg button.on{background:var(--bg);box-shadow:0 1px 3px #0003}
 .up{color:#ef4444}.dn{color:#22c55e}svg{width:100%;height:auto}
-</style></head><body><h1>⛽ Brandstof Kleve</h1><div class="seg"><button data-k="diesel">Diesel</button><button data-k="e5">Super E5</button></div><div id="a">Laden…</div><script>
+#ptr{position:fixed;top:0;left:0;right:0;text-align:center;font-size:13px;color:#888;padding:8px;transform:translateY(-40px);transition:transform .2s;z-index:9;pointer-events:none}#rb{background:none;border:1px solid #888;color:inherit;border-radius:6px;padding:0 6px;margin-left:6px;font-size:13px;cursor:pointer}</style></head><body><div id="ptr">Trek om te verversen</div><h1>⛽ Brandstof Kleve</h1><div class="seg"><button data-k="diesel">Diesel</button><button data-k="e5">Super E5</button></div><div id="a">Laden…</div><script>
 const f=(x,d=3)=>x==null?'–':x.toFixed(d).replace('.',',');
 function chart(series,labels){const W=340,H=160,P=28,all=series.flatMap(s=>s.v).filter(x=>x!=null);if(!all.length)return'';
 const mn=Math.min(...all),mx=Math.max(...all),n=labels.length,X=i=>P+(W-P-4)*(n<2?0:i/(n-1)),Y=v=>H-18-(H-26)*(mx==mn?.5:(v-mn)/(mx-mn));
@@ -19,10 +19,17 @@ for(const se of series){const pts=se.v.map((v,i)=>v==null?null:X(i)+','+Y(v)).fi
 s+=`<text x="${P}" y="${H-3}" font-size="10" fill="currentColor">${labels[0]}</text><text x="${W-4}" y="${H-3}" font-size="10" text-anchor="end" fill="currentColor">${labels[n-1]}</text></svg>`;return s}
 let D=null,K=localStorage.getItem('fuel')||'diesel';
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{K=b.dataset.k;localStorage.setItem('fuel',K);render()});
-fetch('data.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{D=d;render()}).catch(e=>document.getElementById('a').textContent='Fout bij laden: '+e);
+var busy=false;function load(){if(busy)return Promise.resolve();busy=true;return fetch('data.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){D=d;render()}).catch(function(e){if(!D)document.getElementById('a').textContent='Fout bij laden: '+e}).then(function(){busy=false})}
+load();
+(function(){var y0=null,dy=0,el=document.getElementById('ptr'),T=70;function top(){return (window.scrollY||document.documentElement.scrollTop||0)<=0}
+function show(t,px){el.textContent=t;el.style.transform='translateY('+(px-40)+'px)'}
+document.addEventListener('touchstart',function(e){if(busy||!top()){y0=null;return}y0=e.touches[0].clientY;dy=0;el.style.transition='none'},{passive:true});
+document.addEventListener('touchmove',function(e){if(y0==null)return;dy=e.touches[0].clientY-y0;if(dy<=0||!top()){show('Trek om te verversen',0);return}if(e.cancelable)e.preventDefault();show(dy>T?'Loslaten om te verversen':'Trek om te verversen',Math.min(dy/2,60))},{passive:false});
+document.addEventListener('touchend',function(){if(y0==null)return;y0=null;el.style.transition='';if(dy>T){show('Verversen…',40);load().then(function(){show('Verversen…',0)})}else show('Trek om te verversen',0);dy=0},{passive:true});
+window.refreshData=function(){show('Verversen…',40);load().then(function(){show('Verversen…',0)})}})();
 function render(){const d=D;if(!d)return;document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.k==K));
 const F=(d.fuels||{})[K]||{at:d.diesel_at,stations:d.stations,cheapest:d.cheapest},L=K=='e5'?'Super E5':'diesel';
-let h=`<p class="m">${K=='e5'?'Super E5':'Diesel'} – meting: ${String(F.at||'nog geen gegevens').replace('T',' ')}</p><table><tr><th>Station</th><th class="n">€/l</th><th class="n">Δ</th></tr>`;
+let h=`<p class="m">${K=='e5'?'Super E5':'Diesel'} – meting: ${String(F.at||'nog geen gegevens').replace('T',' ')}<button id="rb" onclick="refreshData()" aria-label="Verversen">↻</button></p><table><tr><th>Station</th><th class="n">€/l</th><th class="n">Δ</th></tr>`;
 for(const s of (F.stations||[]))h+=`<tr><td>${s.brand}<div class="m">${s.street}, ${(s.city||'').replace(/^\d+ /,'')}</div></td><td class="n">${s.price==null?'gesloten':f(s.price)}</td><td class="n ${s.diff>0?'up':s.diff<0?'dn':''}">${s.diff==null?'–':(s.diff>0?'+':'')+f(s.diff)}</td></tr>`;
 h+=`</table><h2>Goedkoopste ${L} over tijd</h2>`+chart([{v:(F.cheapest||[]).map(c=>c.p),c:K=='e5'?'#10b981':'#f59e0b'}],(F.cheapest||[]).map(c=>c.t.slice(5,16).replace('T',' ')));
 const o=(d.oil||[]).slice(-120),ol=o.length?o[o.length-1]:{};h+=`<h2>Olieprijs (USD/vat)</h2><p class="m"><span style="color:#3b82f6">■ Brent</span> ${f(ol.brent,2)} &nbsp; <span style="color:#a855f7">■ WTI</span> ${f(ol.wti,2)} (${ol.d||''})</p>`+chart([{v:o.map(x=>x.brent),c:'#3b82f6'},{v:o.map(x=>x.wti),c:'#a855f7'}],o.map(x=>x.d))+`<p class="m">Bron: tankerkoenig/clever-tanken, FRED. Bijgewerkt ${(d.generated||'').replace('T',' ')}</p>`;
