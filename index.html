@@ -1,4 +1,4 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,12 +19,12 @@ for(const se of series){const pts=se.v.map((v,i)=>v==null?null:X(i)+','+Y(v)).fi
 s+=`<text x="${P}" y="${H-3}" font-size="10" fill="currentColor">${labels[0]}</text><text x="${W-4}" y="${H-3}" font-size="10" text-anchor="end" fill="currentColor">${labels[n-1]}</text></svg>`;return s}
 let D=null,K=localStorage.getItem('fuel')||'diesel';
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{K=b.dataset.k;localStorage.setItem('fuel',K);render()});
-fetch('data.json?'+Date.now()).then(r=>r.json()).then(d=>{D=d;render()}).catch(e=>a.textContent='Fout bij laden: '+e);
+fetch('data.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(d=>{D=d;render()}).catch(e=>document.getElementById('a').textContent='Fout bij laden: '+e);
 function render(){const d=D;if(!d)return;document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.k==K));
 const F=(d.fuels||{})[K]||{at:d.diesel_at,stations:d.stations,cheapest:d.cheapest},L=K=='e5'?'Super E5':'diesel';
-let h=`<p class="m">${K=='e5'?'Super E5':'Diesel'} – meting: ${(F.at||'nog geen gegevens').replace('T',' ')}</p><table><tr><th>Station</th><th class="n">€/l</th><th class="n">Δ</th></tr>`;
-for(const s of F.stations)h+=`<tr><td>${s.brand}<div class="m">${s.street}, ${s.city.replace(/^\d+ /,'')}</div></td><td class="n">${s.price==null?'gesloten':f(s.price)}</td><td class="n ${s.diff>0?'up':s.diff<0?'dn':''}">${s.diff==null?'–':(s.diff>0?'+':'')+f(s.diff)}</td></tr>`;
-h+=`</table><h2>Goedkoopste ${L} over tijd</h2>`+chart([{v:F.cheapest.map(c=>c.p),c:K=='e5'?'#10b981':'#f59e0b'}],F.cheapest.map(c=>c.t.slice(5,16).replace('T',' ')));
-const o=d.oil.slice(-120);h+=`<h2>Olieprijs (USD/vat)</h2><p class="m"><span style="color:#3b82f6">■ Brent</span> ${f(o.at(-1)?.brent,2)} &nbsp; <span style="color:#a855f7">■ WTI</span> ${f(o.at(-1)?.wti,2)} (${o.at(-1)?.d||''})</p>`+chart([{v:o.map(x=>x.brent),c:'#3b82f6'},{v:o.map(x=>x.wti),c:'#a855f7'}],o.map(x=>x.d))+`<p class="m">Bron: tankerkoenig/clever-tanken, FRED. Bijgewerkt ${d.generated.replace('T',' ')}</p>`;
+let h=`<p class="m">${K=='e5'?'Super E5':'Diesel'} – meting: ${String(F.at||'nog geen gegevens').replace('T',' ')}</p><table><tr><th>Station</th><th class="n">€/l</th><th class="n">Δ</th></tr>`;
+for(const s of (F.stations||[]))h+=`<tr><td>${s.brand}<div class="m">${s.street}, ${(s.city||'').replace(/^\d+ /,'')}</div></td><td class="n">${s.price==null?'gesloten':f(s.price)}</td><td class="n ${s.diff>0?'up':s.diff<0?'dn':''}">${s.diff==null?'–':(s.diff>0?'+':'')+f(s.diff)}</td></tr>`;
+h+=`</table><h2>Goedkoopste ${L} over tijd</h2>`+chart([{v:(F.cheapest||[]).map(c=>c.p),c:K=='e5'?'#10b981':'#f59e0b'}],(F.cheapest||[]).map(c=>c.t.slice(5,16).replace('T',' ')));
+const o=(d.oil||[]).slice(-120),ol=o.length?o[o.length-1]:{};h+=`<h2>Olieprijs (USD/vat)</h2><p class="m"><span style="color:#3b82f6">■ Brent</span> ${f(ol.brent,2)} &nbsp; <span style="color:#a855f7">■ WTI</span> ${f(ol.wti,2)} (${ol.d||''})</p>`+chart([{v:o.map(x=>x.brent),c:'#3b82f6'},{v:o.map(x=>x.wti),c:'#a855f7'}],o.map(x=>x.d))+`<p class="m">Bron: tankerkoenig/clever-tanken, FRED. Bijgewerkt ${(d.generated||'').replace('T',' ')}</p>`;
 document.getElementById('a').innerHTML=h}
-</script></body></html>
+</script><p class="m" style="margin-top:28px;line-height:1.4">Disclaimer: de getoonde prijzen zijn afkomstig van openbare bronnen (clever-tanken.de / MTS-K en FRED/EIA) en worden automatisch opgehaald. Er wordt geen garantie gegeven op de juistheid, volledigheid of actualiteit van deze informatie. Controleer de prijs altijd bij het tankstation.</p></body></html>
