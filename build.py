@@ -24,6 +24,7 @@ def load(path,col):
             'stations':st,'cheapest':[c for c in cheap if c['p']]}
 dz=load('/workspace/diesel-kleve/history.csv','diesel_eur_l')
 e5=load('/workspace/diesel-kleve/history_e5.csv','e5_eur_l')
+e10=load('/workspace/diesel-kleve/history_e10.csv','e10_eur_l')
 oil=[]
 try:
     for r in csv.DictReader(open('/workspace/oil-price/history.csv')):
@@ -32,5 +33,5 @@ try:
 except FileNotFoundError: pass
 json.dump({'generated':datetime.datetime.now().astimezone().isoformat(timespec='minutes'),
  'diesel_at':dz['at'],'prev_at':dz['prev_at'],'stations':dz['stations'],'cheapest':dz['cheapest'],
- 'fuels':{'diesel':dz,'e5':e5},'oil':oil},open(D+'/data.json','w'))
+ 'fuels':{'diesel':dz,'e5':e5,'e10':e10},'oil':oil},open(D+'/data.json','w'))
 print('ok',len(dz['stations']),len(e5['stations']),len(oil))
