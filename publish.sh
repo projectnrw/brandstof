@@ -13,7 +13,7 @@ if ! git diff --cached --quiet; then
   for i in 1 2 3; do
     if git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=30 push -q origin main; then echo pushed; exit 0; fi
     echo "push failed (try $i), rebasing on remote"
-    git fetch -q origin main && git rebase -q -X ours origin/main || { git rebase --abort 2>/dev/null; git reset -q --soft origin/main; git commit -qm "Update data $(date '+%F %H:%M')"; }
+    git fetch -q origin main && git rebase -q -X theirs origin/main || { git rebase --abort 2>/dev/null; git reset -q --soft origin/main; git commit -qm "Update data $(date '+%F %H:%M')"; }
     sleep 5
   done
   echo "push failed after 3 tries"; exit 1
